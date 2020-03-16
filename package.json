@@ -1,0 +1,11 @@
+{
+	"name": "wbDCbot",
+	"version": "1.0.0",
+	"description": "temp",
+	"main": "main.js",
+	"author": "Deemo Harlos",
+	"dependencies": {
+		"discord.js": "^11.5.1",
+		"mongoose": "^5.9.2"
+	}
+}
