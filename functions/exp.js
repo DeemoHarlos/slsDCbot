@@ -230,8 +230,12 @@ function showTop(msg, bot, db) {
 					if (member)
 						substr += `${member.nickname ? member.nickname : member.user.username}`
 					else {
-						let user = await bot.fetchUser(e.userId)
-						substr += user ? `${user.username} *(已離開)*` : '*(帳號已刪除)*'
+						try {
+							let user = await bot.fetchUser(e.userId)
+							substr += `${user.username} *(已離開)*`
+						} catch {
+							substr += '*(帳號已刪除)*'
+						}
 					}
 					str += substr + '\n'
 					console.log(substr)
