@@ -112,13 +112,12 @@ async function addHistoryExp(channel, ratio, db) {
 	while (true) {
 		if (lastId) options.before = lastId
 		const messages = await channel.fetchMessages(options)
-		messages.tap(msg=>{
+		messages.tap(async msg=>{
 			var incr = msg.content.length * ratio
 			if (msg.author.bot) return
-			User.findOneAndUpdate({userId: msg.author.id}, {$inc: {exp: incr}},
-				{upsert: true, new: true}, (err,doc)=>{
-				if (err) throw err
-			})
+			await User.findOneAndUpdate({userId: msg.author.id},
+				{$inc: {exp: incr}},
+				{upsert: true, new: true})
 		})
 		total += messages.size
 		lastId = messages.last().id
@@ -148,11 +147,10 @@ function initExp(msg, bot, db) {
 	Channel.find((err, docs)=>{
 		if (err) util.debugSend(`Find Channels error: ${err}`, msg.channel)
 		else {
-			docs.forEach((e,i,a)=>{
+			docs.forEach(async (e,i,a)=>{
 				let channel = bot.channels.get(e.channelId)
-				addHistoryExp(channel, e.expRatio, db).then(total=>{
-					util.debugSend(`History exp added for channel ${channel}`, msg.channel)
-				})
+				let total = await addHistoryExp(channel, e.expRatio, db)
+				util.debugSend(`History exp added for channel ${channel}`, msg.channel)
 			})
 		}
 	})
