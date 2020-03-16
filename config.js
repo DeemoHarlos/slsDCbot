@@ -1,4 +1,4 @@
-const prefix     = '?'
+const prefix     = '!'
 const guildId    = '556850341971230772'
 //const spmChannel = '676067274666410034'
 const cmdChannel = '566602429118808079'
