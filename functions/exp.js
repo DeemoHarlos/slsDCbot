@@ -238,7 +238,6 @@ function showTop(msg, bot, db) {
 						}
 					}
 					str += substr + '\n'
-					console.log(substr)
 				}
 				msg.channel.send(str)
 			} else msg.channel.send(`頁碼超出範圍。總頁數為 ${Math.ceil(docs.length/10)}`)
