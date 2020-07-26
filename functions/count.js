@@ -1,5 +1,4 @@
 const util = require('../util.js')
-const config = require('../config.js')
 
 async function totalMessages(channel) {
 	let total = 0
@@ -9,7 +8,7 @@ async function totalMessages(channel) {
 
 	while (true) {
 		if (lastId) options.before = lastId
-		const messages = await channel.fetchMessages(options)
+		const messages = await channel.messages.fetch(options)
 		total += messages.size
 		lastId = messages.last().id
 		if (messages.size < max) break
@@ -27,12 +26,12 @@ function count(ch) {
 
 module.exports = function(bot) {
 	bot.on('message', msg => {
-		util.tryCatch(()=>{
-			// Ignore bot messages.
-			if (msg.author.bot) return
-			if (util.cmd(msg, 'count'))
-				if (util.checkChannel(msg))
-					count(msg.channel)
-		}, bot)
+		// Ignore bot messages.
+		if (msg.author.bot) return
+		let cmd = util.cmd(msg)
+		if (!cmd) return
+		if (cmd[0] === 'count')
+			if (util.checkChannel(msg))
+				count(msg.channel)
 	})
 }

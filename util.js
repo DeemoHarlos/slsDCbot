@@ -1,58 +1,73 @@
 const config = require('./config.js')
 
-module.exports = {
-	is: function(target, arr) {
-		let flag = false
-		arr.forEach((e,i,a)=>{
-			if (target === e) flag = true
-		})
-		return flag
-	},
-	not: function(target, arr) {
-		let flag = true
-		arr.forEach((e,i,a)=>{
-			if (target === e) flag = false
-		})
-		return flag
-	},
-	random: function(arr) {
-		let i = Math.floor(Math.random() * arr.length)
-		return arr[i]
-	},
-	cmd: function(msg, cmd) {
-		let cmd2 = config.prefix+cmd+' '
-		let cmd3 = config.prefix+cmd+'\n'
-		return (msg.content === config.prefix+cmd) ||
-		       (msg.content.slice(0, cmd2.length) === cmd2) ||
-		       (msg.content.slice(0, cmd3.length) === cmd3)
-	},
-	debugSend: function(err, ch) {
-		if (ch) ch.send(err)
-		console.log(err)
-	},
-	tryCatch: function(func, bot) {
-		try {
-			func()
-		} catch (err) {
-			let errorMsg = `[ ERROR ] ${err.name}: ${err.message}`
-			console.log(errorMsg)
-			if (bot && bot.channels && bot.channels.get && bot.channels.get(config.dbgChannel))
-			bot.channels.get(config.dbgChannel).send(errorMsg)
-		}
-	},
-	checkAdmin: function(msg) {
-		if (!msg.member.roles.has(config.adminRole)) {
-			msg.channel.send('此功能僅限管理原使用。')
-			return false
-		} else return true
-	},
-	checkChannel: function(msg) {
-		if (!this.is(msg.channel.id, config.availChannels)) {
-			msg.channel.send('此功能不可在此頻道使用。')
-			return false
-		} else return true
-	},
-	checkMember: function(msg) {
-		return !msg.author.bot && msg.guild
-	}
+var util = {}
+
+util.random = function(arr) {
+	let i = Math.floor(Math.random() * arr.length)
+	return arr[i]
 }
+
+util.sleep = async function(ms) {
+	await new Promise(resolve=>setTimeout(resolve, ms))
+}
+
+util.cmd = function(msg) {
+	let str = msg.content
+	if (!str || str.charAt(0) !== config.prefix) return undefined
+	return str.slice(1).split('\n')[0].split(/ +/)
+}
+
+util.getLangStr = function(msg, strs) {
+	roles = msg.member.roles.cache
+	for (l of config.lang.reverse())
+		if (roles.has(l.role) && strs[l.name])
+			return strs[l.name]
+	for (l of config.lang) if (strs[l.name]) return strs[l.name]
+}
+
+util.debugSend = async function(name, msg, botOrCh) {
+	let str = `< ${name.toUpperCase()} > ${msg}`
+	console.log(str)
+	if (botOrCh && botOrCh.send) await botOrCh.send(str)
+		.catch(err=>console.log(`Cannot send debug message: ` + err))
+	else if (botOrCh && botOrCh.channels && botOrCh.channels.fetch) {
+		let ch = await botOrCh.channels.fetch(config.channels.debug)
+			.catch(err=>console.log(`Cannot send debug message: ` + err))
+		if (!ch || !ch.send) return
+		await ch.send(str).catch(err=>console.log(`Cannot send debug message: ` + err))
+	} else console.log(`Cannot send debug message: argument error`)
+}
+
+util.catch = function(err, botOrCh) {
+	msg = (typeof(err) === 'string') ? err : `${err.name}: ${err.message}`
+	util.debugSend('error', msg, botOrCh)
+}
+
+util.checkAdmin = function(msg) {
+	if (!msg.member.roles.cache.has(config.expRoles.find(r=>r.abbr==="admin").id)) {
+		strs = {
+			'EN': 'Only Admins can use this.',
+			'ZH': '此功能僅限管理員使用。'
+		}
+		msg.channel.send(util.getLangStr(msg, strs))
+		return false
+	} else return true
+}
+
+util.checkChannel = function(msg) {
+	chs = [config.channels.spam, config.channels.cmd, config.channels.debug]
+	if (!chs.includes(msg.channel.id)) {
+		strs = {
+			'EN': 'You cannot use this in this channel.',
+			'ZH': '此功能不可在此頻道使用。'
+		}
+		msg.channel.send(util.getLangStr(msg, strs))
+		return false
+	} else return true
+}
+
+util.checkMember = function(msg) {
+	return !msg.author.bot && msg.guild
+}
+
+module.exports = util

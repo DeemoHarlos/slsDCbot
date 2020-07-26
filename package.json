@@ -5,7 +5,11 @@
 	"main": "main.js",
 	"author": "Deemo Harlos",
 	"dependencies": {
-		"discord.js": "^11.5.1",
-		"mongoose": "^5.9.2"
+		"cheerio": "^1.0.0-rc.3",
+		"discord.js": "^12.2.0",
+		"dotenv": "^8.2.0",
+		"mongoose": "^5.9.2",
+		"request": "^2.88.2",
+		"url-regex": "^5.0.0"
 	}
 }
